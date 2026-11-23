@@ -1,41 +1,54 @@
-This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
+# AGENTS.md — Control Electoral (React Native / Expo)
 
-## Expo has changed — do not trust your training data
+App móvil Android para el escrutinio de una organización política en Ecuador. Roles: **provincial → coordinador de recinto → veedor**.
+Proyecto individual de examen. Se parte de una **línea base de equipo que NO se puede cambiar** (`docs/requirements.md`, `docs/assumptions.md`, `docs/adr/`).
+No respetar la línea base reduce la nota a la mitad: trátala como ley.
 
-Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:
+## Reglas de proceso (obligatorias)
+1. Antes de codificar, indica qué RF/RNF y qué ADR cubre la tarea.
+2. **La línea base no se modifica.** Si algo choca con un ADR o es imposible, DETENTE y pregunta; no lo resuelvas por tu cuenta.
+3. No agregues dependencias fuera del stack de abajo sin preguntar.
+4. Lo que el consenso dejó abierto se decide en `docs/decisions/DI-xx.md`. Léelos antes de implementar.
+5. Un commit por tarea pequeña (mensaje: `feat(acta): ... [RF-05, ADR-07]`).
+6. Al terminar cada tarea actualiza `docs/traceability.md` (RF → archivo → prueba).
+7. Responde y comenta en español. Identificadores de código en inglés o español, pero consistentes.
+8. No implementar los pasos B–D de la fase 3 (alta de usuarios en producción de UI) hasta que `docs/decisions/DI-07` esté DECIDIDO. DI-10 no bloquea nada: se completa tras el primer APK.
 
-1. Read the major version of the `expo` package in `package.json`.
-2. Fetch the matching versioned docs: `https://docs.expo.dev/versions/v<major>.0.0/`
-3. For anything else, fetch https://docs.expo.dev/llms.txt — an index of all Expo docs with corrections to common LLM misconceptions. Follow its links to the specific page you need; never answer from memory.
+## Stack CERRADO (ADR-01…12)
+| Área | Obligatorio |
+|---|---|
+| App | React Native + Expo (TypeScript), APK por **EAS Build** (development/preview build, no Expo Go) |
+| Rutas | Expo Router (grupos por rol) |
+| Estado de UI | **Zustand** (solo sesión, usuario, conectividad, estados visibles de operaciones) |
+| Backend | **Supabase**: Auth, PostgreSQL, Storage (bucket privado), Realtime, Edge Functions, RLS |
+| Offline | **expo-sqlite** + archivos locales + outbox con UUID + **NetInfo** |
+| Formularios | **React Hook Form + Zod** + reglas puras de dominio + CHECK/trigger SQL |
+| Evidencia | **expo-camera** (sin galería) + **expo-location** + comprobación de nitidez |
+| Fallos | **Sentry** (fatales y no fatales) |
+| UI | **Uniwind** + **Lottie** + **Reanimated** |
+| Correo (pruebas) | Resend (opción de envío, no sustituye a Supabase Auth) |
+| Soporte de ADR-09 (autorizado) | `react-native-webview` (visor de DI-04) · `expo-image-manipulator` + `jpeg-js` (comprobación de nitidez, DI-09). Son las **ÚNICAS** dependencias extra autorizadas; cualquier otra sigue requiriendo preguntar (regla 3) |
 
-## Commands
+## PROHIBIDO
+- `signUp` público o autorregistro de cualquier tipo.
+- `service_role` o secretos administrativos en el APK / en `EXPO_PUBLIC_*`.
+- `Alert.alert` y modales genéricos para feedback (usar componentes propios + Lottie).
+- AsyncStorage para actas/pendientes; seleccionar fotos de galería.
+- Cédulas, claves, teléfonos, coordenadas, fotos o votos en eventos/breadcrumbs de Sentry o en logs.
+- Decir «guardado» antes de persistir votos + metadatos + referencia a la foto (RNF-05).
+- Sumar eventos Realtime en el cliente para resultados: siempre se re-consulta el agregado SQL (ADR-10).
+- Confiar solo en ocultar pantallas: la autorización real es RLS (ADR-05, ADR-12).
 
-Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
+## Arquitectura (RNF-02, ADR-01)
+Módulos por funcionalidad, cada uno con `domain/`, `data/`, `presentation/`. **El dominio no importa React, Expo, SQLite ni Supabase**; usa puertos (interfaces) e implementaciones en `data/`.
+Detalle y regla de dependencias: `docs/architecture.md`.
 
-```bash
-npx expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add — resolves SDK-compatible versions
-npx expo start              # start the dev server
-npx expo lint               # lint
-npx tsc --noEmit            # typecheck
-npx expo-doctor             # diagnose dependency and config issues
-npx expo install --fix      # fix incompatible package versions
-```
+## Comandos
+- `npx expo start --dev-client` — desarrollo
+- `npm test` — pruebas unitarias del dominio (deben correr sin Expo)
+- `npx tsc --noEmit` — tipos
+- `eas build -p android --profile preview` — APK
+- `supabase db reset` / `supabase functions serve` — backend local (si se usa CLI)
 
-Run lint and typecheck before declaring any task done.
-
-## Navigation & Routing
-
-- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
-- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
-- Docs: https://docs.expo.dev/router/introduction.md
-
-## Building with EAS
-
-Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.
-Docs: https://docs.expo.dev/eas/index.md
-
-## Rules
-
-- If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
-- Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
-- Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+## Dónde buscar
+`docs/requirements.md` · `docs/assumptions.md` · `docs/adr/` · `docs/decisions/` · `docs/architecture.md` · `docs/data-model.md` · `docs/ux.md` · `docs/traceability.md` · `docs/plan/`
