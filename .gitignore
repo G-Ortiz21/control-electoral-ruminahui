@@ -41,3 +41,12 @@ example
 # generated native folders
 /ios
 /android
+
+
+# añadir al .gitignore del proyecto Expo
+.env
+.env.*
+supabase/.env
+supabase/.temp/
+*.keystore
+!.env.example
