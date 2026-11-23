@@ -28,9 +28,23 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#1E3A8A",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
+        }
+      ],
+      "expo-sqlite",
+      "@sentry/react-native",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "La aplicación usa la cámara para fotografiar el acta durante el escrutinio."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "La aplicación usa tu ubicación para georreferenciar el acta."
         }
       ]
     ],
