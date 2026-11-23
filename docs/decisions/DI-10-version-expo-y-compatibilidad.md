@@ -1,6 +1,6 @@
 # DI-10: Versión de Expo SDK y compatibilidad de librerías
 
-**Estado:** PENDIENTE (se cierra al terminar la fase 1 con el primer APK)
+**Estado:** PENDIENTE (versiones fijadas en fase 1; se cierra con el primer APK)
 **Refina:** ADR-01, ADR-11, ADR-12, RNF-01
 
 ## Contexto
@@ -18,9 +18,10 @@ Fija versiones, no cambia el stack. ADR-12 pide demostrar la compatibilidad en e
 ## Registro (completar tras la fase 1)
 | Dato | Valor |
 |---|---|
-| Expo SDK | |
-| Uniwind / Tailwind | |
-| Reanimated | |
-| Sentry | |
-| Dispositivo y Android de prueba | |
-| Incidencias y solución | |
+| Expo SDK | 58.0.26 (RN 0.88.1, React 19.3.0) |
+| Uniwind / Tailwind | uniwind 1.14.0 / tailwindcss 4.3.5 (Metro `withUniwindConfig`, sin Babel preset) |
+| Reanimated | 4.7.1 (react-native-worklets 0.13.0) |
+| Sentry | @sentry/react-native 8.28.0 (init con release/entorno; org/project por env en build) |
+| expo-sqlite / Lottie | expo-sqlite 58.0.18 / lottie-react-native 7.5.0 |
+| Dispositivo y Android de prueba | (pendiente: completar al instalar el APK en el celular — RNF-01) |
+| Incidencias y solución | (pendiente: verificar en APK. Local: bundle Android OK vía `expo export`, 9 pruebas de dominio OK, `tsc` OK. Warnings upstream de expo-router en exports, sin impacto) |
