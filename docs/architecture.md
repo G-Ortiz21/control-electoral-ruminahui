@@ -42,11 +42,15 @@ presentation ──► domain ◄── data
 - Zustand guarda estado de **presentación** (sesión, rol, conectividad, estado visible de operaciones). La fuente persistente de actas y pendientes es **SQLite**.
 
 ## Flujo de escritura de un acta (resumen de ADR-07/08)
-0. **`BORRADOR`** es un estado de **formulario**, previo a `GUARDADA_LOCAL`: se guarda en SQLite (`actas_locales`) **sin fila en la outbox** y **no se sincroniza**; la UI lo muestra como «Borrador — falta ubicación» (DI-03, sin lectura GPS válida).
 1. Formulario (RHF + Zod) → caso de uso `RegistrarActa` → regla pura de cuadratura.
 2. Foto en almacenamiento privado de la app + fila de acta + fila de outbox, **en una transacción SQLite**.
 3. Solo entonces la UI dice «guardado localmente».
-4. El motor de sync envía la operación (idempotente por `operation_id`), luego sube la foto; estados: `GUARDADA_LOCAL → SINCRONIZANDO → RESULTADO_RECIBIDO → EVIDENCIA_PENDIENTE → RESPALDADA` (o `ERROR`/`CONFLICTO_VERSION`).
+4. El motor de sync envía la operación (idempotente por `operation_id`), luego sube la foto; estados: `GUARDADA_LOCAL → SINCRONIZANDO → RESULTADO_RECIBIDO → EVIDENCIA_PENDIENTE → EVIDENCIA_RESPALDADA` (o `EN_REVISION` si la foto es dudosa, `ERROR`, `CONFLICTO_VERSION` o `PERMISO_REVOCADO`; estos dos últimos detienen los reintentos automáticos y conservan la operación local para revisión).
+5. Al abrir la app se reconcilian archivos sin fila y filas sin archivo (ADR-08: no hay atomicidad entre sistema de archivos y SQLite).
+
+## Visor de ubicación (ADR-09, DI-04)
+Leaflet dentro de `react-native-webview`, EMPAQUETADO localmente (sin CDN). Muestra marcador de captura y de recinto aunque no haya red; solo el mapa base de calles necesita red o teselas en caché. Prohibido abrir mapas externos. Componente único `src/shared/ui/visor-ubicacion.tsx` reutilizado por veedor, coordinador y provincial.
+
 
 ## Pruebas mínimas
 - Dominio sin Expo: cuadratura, cédula, estados, reglas de reemplazo.

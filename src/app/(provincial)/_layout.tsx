@@ -3,19 +3,16 @@ import { useEffect } from 'react';
 
 import { useSessionStore } from '@/modules/auth/presentation/session-store';
 
-/**
- * Guard de navegación del grupo provincial (fase 1: rol simulado).
- * OJO: esto NO es autorización: la autorización real es RLS (ADR-05/ADR-12).
- */
 export default function ProvincialLayout() {
   const rol = useSessionStore((s) => s.rol);
+  const estado = useSessionStore((s) => s.estado);
   const router = useRouter();
 
   useEffect(() => {
-    if (rol !== 'PROVINCIAL') router.replace('/login' as Href);
-  }, [rol, router]);
+    if (rol !== 'PROVINCIAL' || estado !== 'ACTIVO') router.replace('/login' as Href);
+  }, [rol, estado, router]);
 
-  if (rol !== 'PROVINCIAL') return null;
+  if (rol !== 'PROVINCIAL' || estado !== 'ACTIVO') return null;
 
   return <Stack screenOptions={{ headerShown: false }} />;
 }

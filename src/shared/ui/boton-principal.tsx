@@ -5,9 +5,9 @@ import { MEDIDAS, CLASE_ROL, TEXTO_ROL } from './theme';
 export type RolAcento = 'PROVINCIAL' | 'COORDINADOR' | 'VEEDOR';
 
 /**
- * Botón principal con el acento del rol (provincial #1D4ED8, coordinador #4338CA,
- * veedor #0E7490). Altura mínima 56 px y texto blanco sobre el color del rol
- * (azul/índigo/teal → permitido por DI-05).
+ * Botón principal con el acento del rol (provincial #1D4ED8 azul, coordinador
+ * #6D28D9 violeta, veedor #0E7490 turquesa). Altura mínima 56 px y texto blanco
+ * sobre el color del rol (contraste verificado en DI-05 revisión 3).
  */
 export function BotonPrincipal({
   titulo,

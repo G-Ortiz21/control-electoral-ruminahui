@@ -1,2 +1,5 @@
-/** Reglas puras y casos de uso de actas (cuadratura, votos, foto, GPS, correcciones). Entra en la fase que lo active (docs/plan/). */
-export {};
+export * from './entities/acta';
+export * from './validaciones';
+export * from './ports/actas-repository';
+export { RegistrarActa } from './use-cases/registrar-acta';
+export { CorregirActa } from './use-cases/corregir-acta';

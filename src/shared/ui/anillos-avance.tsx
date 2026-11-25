@@ -1,6 +1,8 @@
 import { Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
+import { FranjaIdentidad } from './franja-identidad';
+
 const CENTRO = 70;
 const RADIO_EXTERNO = 62;
 const RADIO_INTERNO = 44;
@@ -34,50 +36,53 @@ export function AnillosAvance({
   const pctRespaldadas = jrvTotal <= 0 ? 0 : Math.round((jrvRespaldadas / jrvTotal) * 100);
 
   return (
-    <View className="w-full items-center">
-      <Svg width={CENTRO * 2} height={CENTRO * 2}>
-        <Circle cx={CENTRO} cy={CENTRO} r={RADIO_EXTERNO} stroke="#E2E8F0" strokeWidth={GROSOR} fill="none" />
-        <Circle
-          cx={CENTRO}
-          cy={CENTRO}
-          r={RADIO_EXTERNO}
-          stroke="#1D4ED8"
-          strokeWidth={GROSOR}
-          strokeLinecap="round"
-          fill="none"
-          strokeDasharray={`${CIRCUNFERENCIA_EXTERNO},${CIRCUNFERENCIA_EXTERNO}`}
-          strokeDashoffset={offsetExterno}
-        />
-        <Circle cx={CENTRO} cy={CENTRO} r={RADIO_INTERNO} stroke="#E2E8F0" strokeWidth={GROSOR} fill="none" />
-        <Circle
-          cx={CENTRO}
-          cy={CENTRO}
-          r={RADIO_INTERNO}
-          stroke="#0E7490"
-          strokeWidth={GROSOR}
-          strokeLinecap="round"
-          fill="none"
-          strokeDasharray={`${CIRCUNFERENCIA_INTERNO},${CIRCUNFERENCIA_INTERNO}`}
-          strokeDashoffset={offsetInterno}
-        />
-      </Svg>
-      <View className="mt-3 flex-row gap-4 text-center">
-        <View>
-          <Text className="text-[11px] font-mono font-bold text-foreground">{pctResultados} %</Text>
-          <Text className="text-[10px] text-texto-secundario">JRV con resultados</Text>
+    <View className="w-full overflow-hidden rounded-22 border border-foreground/10 bg-white/60">
+      <View className="w-full items-center px-3 pb-3 pt-3">
+        <Svg width={CENTRO * 2} height={CENTRO * 2}>
+          <Circle cx={CENTRO} cy={CENTRO} r={RADIO_EXTERNO} stroke="#E2E8F0" strokeWidth={GROSOR} fill="none" />
+          <Circle
+            cx={CENTRO}
+            cy={CENTRO}
+            r={RADIO_EXTERNO}
+            stroke="#1D4ED8"
+            strokeWidth={GROSOR}
+            strokeLinecap="round"
+            fill="none"
+            strokeDasharray={`${CIRCUNFERENCIA_EXTERNO},${CIRCUNFERENCIA_EXTERNO}`}
+            strokeDashoffset={offsetExterno}
+          />
+          <Circle cx={CENTRO} cy={CENTRO} r={RADIO_INTERNO} stroke="#E2E8F0" strokeWidth={GROSOR} fill="none" />
+          <Circle
+            cx={CENTRO}
+            cy={CENTRO}
+            r={RADIO_INTERNO}
+            stroke="#0E7490"
+            strokeWidth={GROSOR}
+            strokeLinecap="round"
+            fill="none"
+            strokeDasharray={`${CIRCUNFERENCIA_INTERNO},${CIRCUNFERENCIA_INTERNO}`}
+            strokeDashoffset={offsetInterno}
+          />
+        </Svg>
+        <View className="mt-3 flex-row gap-4 text-center">
+          <View>
+            <Text className="text-[11px] font-mono font-bold text-foreground">{pctResultados} %</Text>
+            <Text className="text-[10px] text-texto-secundario">JRV con resultados</Text>
+          </View>
+          <View>
+            <Text className="text-[11px] font-mono font-bold text-foreground">{pctRespaldadas} %</Text>
+            <Text className="text-[10px] text-texto-secundario">JRV respaldadas</Text>
+          </View>
         </View>
-        <View>
-          <Text className="text-[11px] font-mono font-bold text-foreground">{pctRespaldadas} %</Text>
-          <Text className="text-[10px] text-texto-secundario">JRV respaldadas</Text>
+        {/* Alternativa en texto: nunca depende solo del color. */}
+        <View className="mt-2">
+          <Text className="text-sm text-foreground">
+            Avance: {jrvConResultados} de {jrvTotal} JRV con resultados ({pctResultados} %); {jrvRespaldadas} de
+            {jrvTotal} JRV respaldadas ({pctRespaldadas} %).
+          </Text>
         </View>
       </View>
-      {/* Alternativa en texto: nunca depende solo del color. */}
-      <View className="mt-2">
-        <Text className="text-sm text-foreground">
-          Avance: {jrvConResultados} de {jrvTotal} JRV con resultados ({pctResultados} %); {jrvRespaldadas} de
-          {jrvTotal} JRV respaldadas ({pctRespaldadas} %).
-        </Text>
-      </View>
+      <FranjaIdentidad />
     </View>
   );
 }

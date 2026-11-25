@@ -10,7 +10,15 @@ import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { contenedor } from '@/composition';
 import { useActaBorradorStore } from '@/modules/actas/presentation/acta-borrador-store';
 import { MAX_INTENTOS_FOTO } from '@/shared/domain/constantes';
-import { calcularNitidez, luminanciaMedia, esFotoNitida, evaluarGps } from '@/modules/actas/domain';
+import {
+  analizarNitidez,
+  evaluarGps,
+  estadoInicialValidacionFoto,
+  limpiarResultadoFoto,
+  puedeUsarFoto,
+  registrarResultadoFoto,
+  type ResultadoAnalisisFoto,
+} from '@/modules/actas/domain';
 import { BotonPrincipal } from '@/shared/ui/boton-principal';
 import { CabeceraRol } from '@/shared/ui/cabecera-rol';
 import { FondoSuave } from '@/shared/ui/fondo-suave';
@@ -45,21 +53,63 @@ function MarcosEsquina() {
   );
 }
 
-function MedidorNitidez({ varianza, nitida }: { varianza: number; nitida: boolean | null }) {
+/** Etiqueta visual derivada del estado real; nunca declara nitidez sin análisis. */
+function EstadoCaptura({ estado }: { estado: 'esperando' | 'analizando' | 'aceptada' | 'rechazada' | 'dudosa' }) {
+  const config = {
+    esperando: { texto: 'Esperando fotografía', clase: 'bg-foreground/10 text-texto-secundario' },
+    analizando: { texto: 'Analizando fotografía…', clase: 'bg-primary/10 text-primary' },
+    aceptada: { texto: 'Fotografía aceptada', clase: 'bg-success/15 text-success' },
+    rechazada: { texto: 'Fotografía rechazada', clase: 'bg-error/15 text-error' },
+    dudosa: { texto: 'Calidad dudosa', clase: 'bg-warning/15 text-warning' },
+  }[estado];
+  return (
+    <View className={`self-start rounded-full px-3 py-1 ${config.clase}`}>
+      <Text className="text-xs font-semibold">{config.texto}</Text>
+    </View>
+  );
+}
+
+function MedidorNitidez({
+  resultado,
+  intentosFallidos,
+}: {
+  resultado: ResultadoAnalisisFoto | null;
+  intentosFallidos: number;
+}) {
+  const analizado = resultado?.analizado === true;
+  const nitida = analizado && resultado.nitida;
+  const varianza = analizado ? resultado.varianza : 0;
   const pct = Math.max(0, Math.min(100, (varianza / 300) * 100));
-  const color = nitida === null ? 'bg-foreground/20' : nitida ? 'bg-success' : 'bg-error';
+  const activos = Math.round((pct / 100) * 6);
+  const colorBarra = !resultado || !resultado.analizado ? 'bg-foreground/20' : nitida ? 'bg-success' : 'bg-error';
+  const colorTexto = !resultado || !resultado.analizado
+    ? 'text-texto-secundario'
+    : nitida ? 'text-success' : 'text-error';
+  const mensaje = !resultado || !resultado.analizado
+    ? 'No se pudo analizar la foto, repite la captura'
+    : nitida
+      ? 'Foto nítida'
+      : 'Foto borrosa, repite la captura';
   return (
     <View className="mt-3">
-      <View className="flex-row justify-between mb-1">
+      <View className="flex-row items-center justify-between mb-1">
         <Text className="text-sm text-texto-secundario">Nitidez</Text>
-        <Text className="text-sm font-mono text-foreground">{Math.round(varianza)}</Text>
+        <Text className="text-base font-mono text-foreground">{analizado ? Math.round(varianza) : '—'}</Text>
       </View>
-      <View className="h-2 rounded-full bg-foreground/10 overflow-hidden">
-        <View className={`h-full ${color}`} style={{ width: `${pct}%` }} />
+      <View className="flex-row gap-1" accessibilityRole="progressbar" accessibilityValue={{ now: Math.round(pct), min: 0, max: 100 }}>
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <View key={i} className={`h-2 flex-1 rounded-full ${i < activos ? colorBarra : 'bg-foreground/10'}`} />
+        ))}
       </View>
-      <Text className="mt-1 text-[12px] text-texto-secundario">
-        {nitida === null ? 'Esperando captura…' : nitida ? 'Foto nítida' : 'Foto borrosa, repite la captura'}
-      </Text>
+      <Text className={`mt-2 text-sm font-semibold ${colorTexto}`}>{mensaje}</Text>
+      <View className="mt-2 flex-row flex-wrap gap-x-4">
+        <Text className="text-xs text-texto-secundario">
+          Luminancia: {analizado ? resultado.luminancia.toFixed(1) : '—'}
+        </Text>
+        <Text className="text-xs text-texto-secundario">
+          Intentos fallidos: {intentosFallidos} de {MAX_INTENTOS_FOTO}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -71,11 +121,9 @@ export default function CapturaFotoScreen() {
   const borrador = useActaBorradorStore((s) => s.borrador);
 
   const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [intentos, setIntentos] = useState(0);
-  const [calidad, setCalidad] = useState<'NORMAL' | 'CALIDAD_DUDOSA'>('NORMAL');
-  const [nitida, setNitida] = useState<boolean | null>(null);
-  const [media, setMedia] = useState<number>(0);
-  const [varianza, setVarianza] = useState<number>(0);
+  // Una sola fuente de verdad: foto, intentos y calidad siempre corresponden
+  // al mismo análisis. Así no se reutiliza el resultado de una foto anterior.
+  const [validacion, setValidacion] = useState(estadoInicialValidacionFoto);
   const [procesando, setProcesando] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -96,12 +144,11 @@ export default function CapturaFotoScreen() {
   }
 
   async function capturar() {
-    if (!cameraRef.current) return;
+    if (!cameraRef.current || procesando) return;
     setProcesando(true);
     setError(null);
     try {
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 });
-      setPhotoUri(photo.uri);
 
       const manip = await ImageManipulator.manipulateAsync(photo.uri, [{ resize: { width: 480 } }], {
         compress: 0.7,
@@ -117,25 +164,17 @@ export default function CapturaFotoScreen() {
         const b = decoded.data[i + 2];
         luminancias.push(0.299 * r + 0.587 * g + 0.114 * b);
       }
-      const v = calcularNitidez(luminancias);
-      const m = luminanciaMedia(luminancias);
-      setVarianza(v);
-      setMedia(m);
-      const esNit = esFotoNitida(v, m);
-      setNitida(esNit);
 
-      const nuevoIntento = intentos + 1;
-      setIntentos(nuevoIntento);
-      if (!esNit) {
-        if (nuevoIntento >= MAX_INTENTOS_FOTO) {
-          setCalidad('CALIDAD_DUDOSA');
-        }
-      } else {
-        setCalidad('NORMAL');
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error al procesar la foto.');
-      setNitida(null);
+      // Se pasan las dimensiones reales del bitmap para usar la Laplacian 2D.
+      const resultado = analizarNitidez(luminancias, decoded.width, decoded.height);
+      setValidacion((v) => registrarResultadoFoto(v, resultado));
+      // La foto se publica solo cuando su resultado ya está calculado: nunca
+      // se muestra una imagen nueva con la medición de la anterior.
+      setPhotoUri(photo.uri);
+    } catch {
+      setValidacion((v) => registrarResultadoFoto(v, { analizado: false, motivo: 'IMAGEN_NO_PROCESABLE' }));
+      setPhotoUri(null);
+      setError('No se pudo analizar la foto. Toma otra fotografía.');
     } finally {
       setProcesando(false);
     }
@@ -143,11 +182,18 @@ export default function CapturaFotoScreen() {
 
   function repetir() {
     setPhotoUri(null);
-    setNitida(null);
+    setError(null);
+    // Los fallos consecutivos se conservan; solo se descarta el resultado de la
+    // foto anterior para que no pueda aplicarse a la nueva.
+    setValidacion((v) => limpiarResultadoFoto(v));
   }
 
   async function usarFoto() {
-    if (!photoUri || !borrador) return;
+    if (!photoUri || !borrador || procesando) return;
+    if (!puedeUsarFoto(validacion)) {
+      setError('La foto aún no es nítida. Repite la captura o continúa tras tres intentos fallidos.');
+      return;
+    }
     setEnviando(true);
     setError(null);
     try {
@@ -195,7 +241,7 @@ export default function CapturaFotoScreen() {
         lat: loc!.coords.latitude,
         lon: loc!.coords.longitude,
         accuracy: loc!.coords.accuracy ?? 0,
-        calidadFoto: calidad,
+        calidadFoto: validacion.calidad,
         distanciaRecintoM: gps.distanciaM ?? 0,
       };
 
@@ -220,9 +266,24 @@ export default function CapturaFotoScreen() {
     }
   }
 
+  const dignidadTexto = borrador?.dignidad === 'PREFECTURA' ? 'Prefectura' : 'Alcaldía';
+  const estadoVisual = procesando
+    ? 'analizando'
+    : !photoUri
+      ? 'esperando'
+      : validacion.calidad === 'CALIDAD_DUDOSA'
+        ? 'dudosa'
+        : puedeUsarFoto(validacion)
+          ? 'aceptada'
+          : 'rechazada';
+
   return (
     <FondoSuave>
-      <CabeceraRol rol="VEEDOR" recinto="Captura de evidencia" />
+      <CabeceraRol
+        rol="VEEDOR"
+        recinto={borrador?.recintoNombre ?? 'Captura de evidencia'}
+        jrv={borrador ? borrador.jrvId.slice(0, 8) : undefined}
+      />
       {mensaje ? (
         <View className="flex-1 items-center justify-center px-6">
           <LottieFeedback tipo="exito" mensaje={mensaje} />
@@ -232,6 +293,24 @@ export default function CapturaFotoScreen() {
         <View className="flex-1">
           <CameraView ref={cameraRef} style={{ flex: 1 }} facing="back" />
           <MarcosEsquina />
+          <View className="absolute left-4 right-4 top-4">
+            <TarjetaVidrio clase="gap-1 px-4 py-3">
+              <View className="flex-row items-center justify-between gap-2">
+                <Text className="text-base font-semibold text-foreground">Acta de {dignidadTexto}</Text>
+                <EstadoCaptura estado={estadoVisual} />
+              </View>
+              <Text className="text-xs text-texto-secundario">
+                Encuadra el acta completa dentro del marco. Evita reflejos y deja los bordes visibles.
+              </Text>
+            </TarjetaVidrio>
+          </View>
+          {error ? (
+            <View className="absolute bottom-28 left-4 right-4">
+              <TarjetaVidrio clase="px-4 py-2">
+                <Text className="text-center text-sm text-error">{error}</Text>
+              </TarjetaVidrio>
+            </View>
+          ) : null}
           <View className="absolute bottom-8 w-full items-center">
             <Pressable
               onPress={capturar}
@@ -242,28 +321,59 @@ export default function CapturaFotoScreen() {
             >
               <Text className="text-sm font-bold text-foreground">{procesando ? '...' : 'Foto'}</Text>
             </Pressable>
+            <Text className="mt-2 text-xs text-texto-secundario">Toca para capturar</Text>
           </View>
+          {procesando ? (
+            <View className="absolute inset-0 items-center justify-center bg-background/80">
+              <LottieFeedback tipo="carga" mensaje="Analizando foto…" />
+            </View>
+          ) : null}
         </View>
       ) : (
-        <ScrollView className="flex-1 px-6 pt-4">
-          <TarjetaVidrio clase="p-3">
-            <Image source={{ uri: photoUri }} style={{ width: '100%', height: 280, borderRadius: 16 }} />
-            <MedidorNitidez varianza={varianza} nitida={nitida} />
-            <Text className="mt-2 text-[12px] text-texto-secundario">
-              Luminancia: {media.toFixed(1)} · Intento {intentos} de {MAX_INTENTOS_FOTO}
-            </Text>
-            {calidad === 'CALIDAD_DUDOSA' ? (
-              <Text className="mt-2 text-sm font-semibold text-warning">Foto de calidad dudosa — pendiente de revisión</Text>
+        <ScrollView className="flex-1 px-6 pt-4" contentContainerStyle={{ paddingBottom: 24 }}>
+          <TarjetaVidrio clase="gap-3 p-4">
+            <View className="flex-row items-center justify-between gap-2">
+              <Text className="text-base font-semibold text-foreground">Acta de {dignidadTexto}</Text>
+              <EstadoCaptura estado={estadoVisual} />
+            </View>
+            <View className="overflow-hidden rounded-2xl">
+              <Image source={{ uri: photoUri }} style={{ width: '100%', height: 260 }} resizeMode="cover" />
+            </View>
+            <MedidorNitidez resultado={validacion.resultado} intentosFallidos={validacion.intentosFallidos} />
+            {validacion.calidad === 'CALIDAD_DUDOSA' ? (
+              <Text className="rounded-xl bg-warning/15 p-2 text-sm font-semibold text-warning">
+                Foto de calidad dudosa — pendiente de revisión. Puedes repetir o guardar con esta etiqueta.
+              </Text>
+            ) : null}
+            {estadoVisual === 'aceptada' ? (
+              <Text className="text-sm text-success">La foto parece nítida. Puedes continuar.</Text>
+            ) : estadoVisual === 'rechazada' ? (
+              <Text className="text-sm text-texto-secundario">
+                Repite la captura. Tras tres intentos fallidos podrás guardarla como dudosa.
+              </Text>
             ) : null}
           </TarjetaVidrio>
-          {error ? <Text className="mt-3 text-base text-error">{error}</Text> : null}
-          <View className="mt-4 gap-2 pb-8">
-            {calidad !== 'CALIDAD_DUDOSA' && !nitida && intentos < MAX_INTENTOS_FOTO ? (
-              <BotonPrincipal titulo="Repetir captura" rol="VEEDOR" onPress={repetir} />
+          {error ? (
+            <View className="mt-3 rounded-xl bg-error/10 p-3">
+              <Text className="text-sm text-error">{error}</Text>
+            </View>
+          ) : null}
+          <View className="mt-4 gap-2">
+            {puedeUsarFoto(validacion) ? (
+              <BotonPrincipal
+                titulo={enviando ? 'Guardando...' : validacion.calidad === 'CALIDAD_DUDOSA' ? 'Usar foto dudosa' : 'Usar esta foto'}
+                rol="VEEDOR"
+                onPress={() => { if (!enviando) usarFoto(); }}
+              />
             ) : null}
-            <BotonPrincipal titulo={enviando ? 'Guardando...' : 'Usar esta foto'} rol="VEEDOR" onPress={() => { if (!enviando) usarFoto(); }} />
-            <Pressable onPress={repetir} className="items-center py-3">
-              <Text className="text-sm font-semibold text-texto-secundario">Repetir</Text>
+            <Pressable
+              onPress={repetir}
+              accessibilityRole="button"
+              accessibilityLabel="Repetir captura"
+              className="w-full items-center justify-center rounded-22 border border-accent/40 bg-white/60 active:opacity-80"
+              style={{ minHeight: 56 }}
+            >
+              <Text className="text-base font-semibold text-accent">Repetir captura</Text>
             </Pressable>
           </View>
         </ScrollView>

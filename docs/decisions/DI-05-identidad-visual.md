@@ -1,8 +1,32 @@
 # DI-05: Organización política, paleta y tema
 
-**Estado:** DECIDIDO (revisión 2; la revisión 1 se conserva más abajo como historial)  
+**Estado:** DECIDIDO (revisión 3; las revisiones 2 y 1 se conservan más abajo como historial)  
 **Refina:** RNF-06, RNF-08, ADR-12  
 **Depende de:** DI-11 (dependencias de presentación: expo-linear-gradient, react-native-svg)
+
+## Revisión 3 — Franja de identidad y acentos por rol
+
+### Contexto
+
+Se solicita una referencia cromática inspirada en los siete colores de la bandera de Pachakutik para reforzar la identidad visual, sin reproducir símbolos oficiales ni presentarla como identidad oficial de esa organización. **No se dispone de una fuente verificable adicional que acredite los códigos hexadecimales como una reproducción exacta**: se trata de una interpretación cromática aproximada, declarada como tal. Si se requiere una réplica oficial, debe encargarse una investigación documental antes de afirmarla.
+
+### Decisión (revisión 3)
+
+- Se incorpora el componente compartido `src/shared/ui/franja-identidad.tsx`: **4 px de alto**, siete segmentos de igual proporción, sin texto, iconos, estado ni interacción. Es **exclusivamente decorativa** y nunca es el único indicador de estado, error o alerta.
+- Paleta exacta de la franja (tokens en `@theme` de `src/global.css`):
+  - Rojo `#D32F2F` · Naranja `#F57C00` · Amarillo `#FBC02D` · Verde `#2E9E4F` · Turquesa `#0E7490` · Azul `#1D4ED8` · Violeta `#6D28D9`.
+- Ubicaciones: debajo de la cabecera compartida de los tres roles (`CabeceraRol`), en el borde de `AnillosAvance` (sin tocar sus cálculos, SVG ni animaciones) y en la pantalla de arranque (`src/app/index.tsx`). La pantalla «Coordinadores» usa la franja en lugar de una franja ámbar anterior para evitar duplicación.
+- Acentos por rol: provincial azul `#1D4ED8`, coordinador violeta `#6D28D9` (antes `#4338CA`), veedor turquesa `#0E7490`. No cambia la navegación, la jerarquía ni los permisos.
+- Contraste verificado: texto blanco sobre azul (6.70:1), violeta (7.10:1) y turquesa (5.36:1). Texto `#0B1F4B` se conserva sobre naranja y amarillo; la franja no lleva texto.
+- Se conserva el logotipo propio del **sol naciente** (SVG local). No se reproducen la bandera de Pachakutik, el churo, la wiphala ni logotipos o símbolos oficiales de organizaciones políticas.
+- Pie informativo «Datos de prueba — no corresponde a resultados reales» en login y panel provincial, como pie no superpuesto que respeta el área segura.
+- `organizaciones.color` **no se modifica en Supabase**. Sobre el fondo real del vidrio (`#FCFDFE`, blanco 75 % sobre `#F4F8FB`), `#0EA5E9` (2.72:1) y `#F59E0B` (2.11:1) no alcanzan 3:1; `colorOrganizacionLegible()` deriva variantes presentacionales más oscuras (`#0C91CD`, 3.47:1 y `#BE7A09`, 3.45:1). Los otros tres colores del seed (`#1E3A8A`, `#15803D`, `#B91C1C`) sí cumplen.
+
+### Por qué no contradice la línea base
+
+Solo afecta a presentación y documentación: Uniwind, componentes compartidos y tokens existentes. No se modifica dominio, casos de uso, repositorios, RPC, Edge Functions, RLS, tablas, autenticación ni reglas electorales. ADR-12 y la revisión 2 de DI-05 dejan la identidad visual al implementador.
+
+---
 
 ## Contexto (revisión 2)
 

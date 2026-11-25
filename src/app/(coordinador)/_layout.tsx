@@ -3,19 +3,16 @@ import { useEffect } from 'react';
 
 import { useSessionStore } from '@/modules/auth/presentation/session-store';
 
-/**
- * Guard de navegación del grupo coordinador (fase 1: rol simulado).
- * OJO: esto NO es autorización: la autorización real es RLS (ADR-05/ADR-12).
- */
 export default function CoordinadorLayout() {
   const rol = useSessionStore((s) => s.rol);
+  const estado = useSessionStore((s) => s.estado);
   const router = useRouter();
 
   useEffect(() => {
-    if (rol !== 'COORDINADOR') router.replace('/login' as Href);
-  }, [rol, router]);
+    if (rol !== 'COORDINADOR' || estado !== 'ACTIVO') router.replace('/login' as Href);
+  }, [rol, estado, router]);
 
-  if (rol !== 'COORDINADOR') return null;
+  if (rol !== 'COORDINADOR' || estado !== 'ACTIVO') return null;
 
   return <Stack screenOptions={{ headerShown: false }} />;
 }

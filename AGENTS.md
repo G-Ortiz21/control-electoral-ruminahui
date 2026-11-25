@@ -12,7 +12,6 @@ No respetar la línea base reduce la nota a la mitad: trátala como ley.
 5. Un commit por tarea pequeña (mensaje: `feat(acta): ... [RF-05, ADR-07]`).
 6. Al terminar cada tarea actualiza `docs/traceability.md` (RF → archivo → prueba).
 7. Responde y comenta en español. Identificadores de código en inglés o español, pero consistentes.
-8. No implementar los pasos B–D de la fase 3 (alta de usuarios en producción de UI) hasta que `docs/decisions/DI-07` esté DECIDIDO. DI-10 no bloquea nada: se completa tras el primer APK.
 
 ## Stack CERRADO (ADR-01…12)
 | Área | Obligatorio |
@@ -27,7 +26,6 @@ No respetar la línea base reduce la nota a la mitad: trátala como ley.
 | Fallos | **Sentry** (fatales y no fatales) |
 | UI | **Uniwind** + **Lottie** + **Reanimated** |
 | Correo (pruebas) | Resend (opción de envío, no sustituye a Supabase Auth) |
-| Soporte de ADR-09 (autorizado) | `react-native-webview` (visor de DI-04) · `expo-image-manipulator` + `jpeg-js` (comprobación de nitidez, DI-09). Son las **ÚNICAS** dependencias extra autorizadas; cualquier otra sigue requiriendo preguntar (regla 3) |
 
 ## PROHIBIDO
 - `signUp` público o autorregistro de cualquier tipo.
@@ -38,6 +36,13 @@ No respetar la línea base reduce la nota a la mitad: trátala como ley.
 - Decir «guardado» antes de persistir votos + metadatos + referencia a la foto (RNF-05).
 - Sumar eventos Realtime en el cliente para resultados: siempre se re-consulta el agregado SQL (ADR-10).
 - Confiar solo en ocultar pantallas: la autorización real es RLS (ADR-05, ADR-12).
+- Abrir mapas externos (`Linking.openURL`, `geo:`, Google Maps) para mostrar ubicaciones, o cargar Leaflet desde un CDN: el visor es Leaflet en WebView, DENTRO de la app y empaquetado localmente (ADR-09).
+- Presentar datos ficticios como padrón real de recintos/JRV (S-01, ADR-03).
+
+## Vocabulario de estados (baseline final; no inventar otros)
+- Acta/evidencia: `RESULTADO_RECIBIDO`, `EVIDENCIA_PENDIENTE`, `EN_REVISION` (foto dudosa), `EVIDENCIA_RESPALDADA`.
+- Operación local: `GUARDADA_LOCAL`, `SINCRONIZANDO`, `ERROR`, `CONFLICTO_VERSION`, `PERMISO_REVOCADO` (estos dos últimos detienen reintentos automáticos).
+- JRV: `REPORTADA` (dos actas con RESULTADO_RECIBIDO) y `RESPALDADA` (dos actas con EVIDENCIA_RESPALDADA).
 
 ## Arquitectura (RNF-02, ADR-01)
 Módulos por funcionalidad, cada uno con `domain/`, `data/`, `presentation/`. **El dominio no importa React, Expo, SQLite ni Supabase**; usa puertos (interfaces) e implementaciones en `data/`.

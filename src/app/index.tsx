@@ -1,5 +1,6 @@
 import { View } from 'react-native';
 
+import { FranjaIdentidad } from '@/shared/ui/franja-identidad';
 import { FondoSuave } from '@/shared/ui/fondo-suave';
 import { LottieFeedback } from '@/shared/ui/lottie-feedback';
 
@@ -7,8 +8,11 @@ import { LottieFeedback } from '@/shared/ui/lottie-feedback';
 export default function Index() {
   return (
     <FondoSuave>
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 items-center justify-center gap-8">
         <LottieFeedback tipo="carga" mensaje="Cargando…" />
+        <View className="w-full px-10">
+          <FranjaIdentidad />
+        </View>
       </View>
     </FondoSuave>
   );

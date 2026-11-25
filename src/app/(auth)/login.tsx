@@ -1,18 +1,20 @@
 import { crearZodResolver } from '@/shared/ui/zod-resolver';
-import { TOKENS } from '@/shared/ui/theme';
 import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { z } from 'zod';
 
 import { contenedor } from '@/composition';
 import { RUTAS_POR_ROL } from '@/modules/auth/domain/roles';
 import { useSessionStore } from '@/modules/auth/presentation/session-store';
 import { BotonPrincipal } from '@/shared/ui/boton-principal';
+import { CampoFormulario } from '@/shared/ui/campo-formulario';
+import { CampoTexto } from '@/shared/ui/campo-texto';
 import { EntradaOcultaSentry } from '@/shared/ui/entrada-oculta-sentry';
 import { FondoSuave } from '@/shared/ui/fondo-suave';
 import { LottieFeedback } from '@/shared/ui/lottie-feedback';
+import { PieDatosPrueba } from '@/shared/ui/pie-datos-prueba';
 import { TarjetaVidrio } from '@/shared/ui/tarjeta-vidrio';
 
 const esquema = z.object({
@@ -32,7 +34,7 @@ export default function Login() {
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, touchedFields },
   } = useForm<Formulario>({
     resolver: crearZodResolver(esquema) as never,
     defaultValues: { email: '', password: '' },
@@ -61,15 +63,17 @@ export default function Login() {
 
   return (
     <FondoSuave>
-      <View className="flex-1 px-6 justify-center">
-        <View className="items-center mb-6">
+      <View className="flex-1">
+        <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <ScrollView className="flex-1 px-6" contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 24 }}>
+            <View className="items-center mb-6">
           <EntradaOcultaSentry />
           <Text className="mt-2 text-base text-texto-secundario text-center">
             Escrutinio, actas y seguimiento en campo
           </Text>
         </View>
 
-        <TarjetaVidrio clase="p-5 gap-4">
+        <TarjetaVidrio clase="w-full gap-5 p-6">
           <Text className="text-2xl font-bold text-foreground">Iniciar sesión</Text>
 
           {operacion === 'cargando' && <LottieFeedback tipo="carga" mensaje={mensaje ?? 'Cargando…'} />}
@@ -80,46 +84,53 @@ export default function Login() {
             </View>
           )}
 
-          <View className="gap-1">
-            <Text className="text-base font-semibold text-foreground">Correo</Text>
+          <CampoFormulario
+            etiqueta="Correo"
+            pista="Obligatorio · correo electrónico válido"
+            error={errors.email?.message}
+            valido={Boolean(touchedFields.email && !errors.email)}
+          >
             <Controller
               control={control}
               name="email"
               render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
-                  className="h-14 rounded-xl border border-foreground/20 bg-white/70 px-4 text-base text-foreground"
-                  placeholder="correo@ejemplo.ec"
-                  placeholderTextColor={TOKENS.textoSecundario}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  onBlur={onBlur}
+                <CampoTexto
+                  etiqueta="Correo"
+                  valor={value}
                   onChangeText={onChange}
-                  value={value}
+                  onBlur={onBlur}
+                  teclado="email-address"
+                  placeholder="correo@ejemplo.ec"
+                  error={errors.email?.message}
+                  valido={Boolean(touchedFields.email && !errors.email)}
                 />
               )}
             />
-            {errors.email && <Text className="text-sm text-error">{errors.email.message}</Text>}
-          </View>
+          </CampoFormulario>
 
-          <View className="gap-1">
-            <Text className="text-base font-semibold text-foreground">Contraseña</Text>
+          <CampoFormulario
+            etiqueta="Contraseña"
+            pista="Obligatorio"
+            error={errors.password?.message}
+            valido={Boolean(touchedFields.password && !errors.password)}
+          >
             <Controller
               control={control}
               name="password"
               render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
-                  className="h-14 rounded-xl border border-foreground/20 bg-white/70 px-4 text-base text-foreground"
-                  placeholder="••••••••"
-                  placeholderTextColor={TOKENS.textoSecundario}
-                  secureTextEntry
-                  onBlur={onBlur}
+                <CampoTexto
+                  etiqueta="Contraseña"
+                  valor={value}
                   onChangeText={onChange}
-                  value={value}
+                  onBlur={onBlur}
+                  seguro
+                  placeholder="••••••••"
+                  error={errors.password?.message}
+                  valido={Boolean(touchedFields.password && !errors.password)}
                 />
               )}
             />
-            {errors.password && <Text className="text-sm text-error">{errors.password.message}</Text>}
-          </View>
+          </CampoFormulario>
 
           <BotonPrincipal titulo="Iniciar sesión" onPress={handleSubmit(onSubmit)} />
 
@@ -137,7 +148,10 @@ export default function Login() {
               Primer ingreso (OTP)
             </Text>
           </View>
-        </TarjetaVidrio>
+          </TarjetaVidrio>
+          </ScrollView>
+        </KeyboardAvoidingView>
+        <PieDatosPrueba />
       </View>
     </FondoSuave>
   );

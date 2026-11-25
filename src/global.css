@@ -26,9 +26,20 @@
   --color-foreground: #0b1f4b;        /* texto principal */
   --color-texto-secundario: #3b4a78;  /* texto secundario */
   --color-texto-sobre-color: #ffffff; /* texto sobre color */
-  --color-rol-provincial: #1d4ed8;    /* acento de rol: provincial */
-  --color-rol-coordinador: #4338ca;   /* acento de rol: coordinador */
-  --color-rol-veedor: #0e7490;        /* acento de rol: veedor */
+  --color-rol-provincial: #1d4ed8;    /* acento de rol: provincial — azul */
+  --color-rol-coordinador: #6d28d9;   /* acento de rol: coordinador — violeta */
+  --color-rol-veedor: #0e7490;        /* acento de rol: veedor — turquesa */
+
+  /* Franja decorativa de identidad (DI-05 revisión 3): inspiración cromática
+     aproximada, NO una bandera oficial ni un símbolo político. Solo decoración. */
+  --color-franja-rojo: #d32f2f;
+  --color-franja-naranja: #f57c00;
+  --color-franja-amarillo: #fbc02d;
+  --color-franja-verde: #2e9e4f;
+  --color-franja-turquesa: #0e7490;
+  --color-franja-azul: #1d4ed8;
+  --color-franja-violeta: #6d28d9;
+
   --color-sombra-azul: rgba(30, 64, 175, 0.12);
 
   --shadow-suave-azul: 0 8px 24px -4px rgba(30, 64, 175, 0.12);

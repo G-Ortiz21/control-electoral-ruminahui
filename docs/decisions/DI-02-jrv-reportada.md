@@ -1,25 +1,20 @@
-# DI-02: Definición de «JRV reportada»
+# DI-02: Definición de «JRV reportada» y «JRV respaldada»
 
-**Estado:** DECIDIDO
-**Refina:** S-04, ADR-10, RF-11
+**Estado:** DECIDIDO (alineada con el texto final de S-04 y ADR-10)
+**Refina:** S-04, ADR-10, RF-11, RNF-08
 
 ## Contexto
-No se ratificó si una mesa está «reportada» con las dos actas recibidas o con las dos actas con evidencia aceptada.
-
-## Alternativas consideradas
-| Alternativa | Ventajas | Desventajas |
-|---|---|---|
-| Reportada = 2 actas con RESULTADO_RECIBIDO | Avance numérico inmediato; permite exit poll en tiempo real | Puede haber fotos aún pendientes |
-| Reportada = 2 actas RESPALDADAS | Más estricta | Retrasa el avance y contradice el objetivo de seguimiento en tiempo real |
+La versión final de S-04 y ADR-10 ratificó las definiciones. Esta DI solo fija cómo se muestran.
 
 ## Decisión
-El panel muestra **dos indicadores separados**:
-- **JRV con resultados** = ambas dignidades en `RESULTADO_RECIBIDO` o superior (cuenta para votos y avance numérico).
-- **JRV respaldadas** = ambas dignidades con evidencia validada (`RESPALDADA`).
-Los votos se calculan siempre desde actas vigentes en servidor.
+- **JRV REPORTADA** = sus dos actas (alcaldía y prefectura) tienen `RESULTADO_RECIBIDO` (o un estado de evidencia posterior). Cuenta para votos y avance numérico.
+- **JRV RESPALDADA** = sus dos actas tienen además `EVIDENCIA_RESPALDADA`.
+- Estados de evidencia: `EVIDENCIA_PENDIENTE` (foto sin confirmar), `EN_REVISION` (foto dudosa) y `EVIDENCIA_RESPALDADA` (foto aceptada).
+- El panel provincial muestra **por separado** «JRV reportadas» y «JRV respaldadas» por recinto, más el **conteo de fotos pendientes y en revisión**, «Última actualización» y estado «Sin conexión».
+- Los votos se calculan siempre en PostgreSQL desde las versiones vigentes; Realtime solo avisa y el cliente re-consulta (ADR-10, RNF-08).
 
 ## Por qué no contradice la línea base
-ADR-10 propone exactamente separar RESULTADO_RECIBIDO de EVIDENCIA_RESPALDADA y no fija la denominación; esta DI solo la fija.
+Usa los mismos términos y reglas de S-04 y ADR-10 (cambia el rótulo anterior «JRV con resultados» por «JRV reportadas»).
 
 ## Consecuencias y pruebas
-Dos actas por JRV, foto en espera → cuenta en «con resultados», no en «respaldadas». Corrección → no duplica votos.
+Dos actas con foto en espera → cuenta en «reportadas», no en «respaldadas». Foto dudosa → `EN_REVISION`, no respaldada. Corrección → no duplica votos.

@@ -1,2 +1,2 @@
-/** Adaptadores de territorio (Supabase/SQLite). Entra en la fase que lo active (docs/plan/). */
-export {};
+export * from './catalogo-repository';
+export { SupabaseTerritorioRepository } from './supabase-territorio-repository';

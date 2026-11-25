@@ -15,9 +15,10 @@ S-06 (tres intentos y `CALIDAD_DUDOSA`) y S-07 (`expected_version` y `CONFLICTO_
 | Corrección: `expected_version` + `CONFLICTO_VERSION` (S-07) | No se sobrescribe nada; queda historial | Hay que mostrar ambos valores al usuario |
 
 ## Decisión
-1. **Foto:** al detectar desenfoque se pide repetir. Al tercer intento fallido se guarda la foto con marca `CALIDAD_DUDOSA` y el acta puede enviarse. Esa acta cuenta en «JRV con resultados» y **no** en «JRV respaldadas» (DI-02). La UI lo indica con texto: «Foto de calidad dudosa — pendiente de revisión».
+1. **Foto:** al detectar desenfoque se pide repetir. Al tercer intento fallido se guarda la foto con marca `CALIDAD_DUDOSA` y el acta puede enviarse. Esa acta cuenta en «JRV reportadas» y **no** en «JRV respaldadas» (DI-02); su evidencia queda en `EN_REVISION` (S-04). La UI lo indica con texto: «Foto de calidad dudosa — pendiente de revisión».
 2. **Corrección:** toda corrección envía `expected_version`. Si la versión del servidor es otra, la RPC responde `CONFLICTO_VERSION` y no modifica nada. La app muestra el valor actual y el propuesto, y el usuario decide con un motivo. Cada corrección válida inserta una fila en `revisiones_acta` con autor, hora, motivo y valores anteriores.
 3. Las constantes (`MAX_INTENTOS_FOTO = 3`) viven en `shared/domain`.
+4. Un `CONFLICTO_VERSION` o un `PERMISO_REVOCADO` detienen los reintentos automáticos y conservan la operación local para revisión, sin sobrescribir nada (ADR-08, S-07, S-08).
 
 ## Por qué no contradice la línea base
 Implementa literalmente S-06 y S-07 y respeta ADR-09 («tras tres fallos puede conservarse CALIDAD_DUDOSA… no como foto validada») y RF-08 (historial sin pérdida).

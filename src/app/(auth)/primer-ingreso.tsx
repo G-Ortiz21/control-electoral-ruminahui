@@ -1,15 +1,16 @@
 import { crearZodResolver } from '@/shared/ui/zod-resolver';
-import { TOKENS } from '@/shared/ui/theme';
-import { useRouter, type Href } from 'expo-router';
+import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { z } from 'zod';
 
 import { contenedor } from '@/composition';
 import { RUTAS_POR_ROL } from '@/modules/auth/domain/roles';
 import { useSessionStore } from '@/modules/auth/presentation/session-store';
 import { BotonPrincipal } from '@/shared/ui/boton-principal';
+import { CampoFormulario } from '@/shared/ui/campo-formulario';
+import { CampoTexto } from '@/shared/ui/campo-texto';
 import { FondoSuave } from '@/shared/ui/fondo-suave';
 import { LottieFeedback } from '@/shared/ui/lottie-feedback';
 import { OtpCasillas } from '@/shared/ui/otp-casillas';
@@ -20,7 +21,7 @@ const esquemaOtp = z.object({
 });
 
 const esquemaFinal = z.object({
-  otp: z.string().min(4, 'El código OTP debe tener entre 4 y 8 dígitos.').max(8),
+  otp: z.string(),
   nuevaClave: z.string().min(8, 'La nueva contraseña debe tener al menos 8 caracteres.'),
 });
 
@@ -29,17 +30,22 @@ type FormFinal = z.infer<typeof esquemaFinal>;
 
 export default function PrimerIngreso() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const correoConfirmado = params.confirmado === '1';
+  const correoInicial = String(params.email ?? '').trim().toLowerCase();
   const setSesion = useSessionStore((s) => s.setSesion);
   const setOperacion = useSessionStore((s) => s.setOperacion);
   const operacion = useSessionStore((s) => s.operacion);
   const mensaje = useSessionStore((s) => s.mensajeOperacion);
 
-  const [paso, setPaso] = useState<'solicitar' | 'verificar'>('solicitar');
-  const [email, setEmail] = useState('');
+  const [paso, setPaso] = useState<'solicitar' | 'verificar'>(correoConfirmado ? 'verificar' : 'solicitar');
+  const [email, setEmail] = useState(correoInicial);
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
 
   const formOtp = useForm<FormOtp>({ resolver: crearZodResolver(esquemaOtp) as never, defaultValues: { email: '' } });
   const formFinal = useForm<FormFinal>({ resolver: crearZodResolver(esquemaFinal) as never, defaultValues: { otp: '', nuevaClave: '' } });
+  const { touchedFields: touchedOtp } = formOtp.formState;
+  const { touchedFields: touchedFinal } = formFinal.formState;
 
   const solicitar = async (data: FormOtp) => {
     setErrorGeneral(null);
@@ -57,8 +63,17 @@ export default function PrimerIngreso() {
 
   const finalizar = async (data: FormFinal) => {
     setErrorGeneral(null);
+    if (!correoConfirmado && !/^\d{4,8}$/.test(data.otp.trim())) {
+      setErrorGeneral('El código OTP debe tener entre 4 y 8 dígitos.');
+      return;
+    }
     setOperacion('cargando', 'Verificando y activando…');
-    const res = await contenedor.casos.completarPrimerIngreso.ejecutar(email, data.otp, data.nuevaClave);
+    const res = await contenedor.casos.completarPrimerIngreso.ejecutar(
+      email,
+      data.otp,
+      data.nuevaClave,
+      correoConfirmado,
+    );
     if (!res.ok) {
       setOperacion('error', res.error);
       setErrorGeneral(res.error);
@@ -79,8 +94,9 @@ export default function PrimerIngreso() {
 
   return (
     <FondoSuave>
-      <View className="flex-1 px-6 justify-center">
-        <TarjetaVidrio clase="p-5 gap-4">
+      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView className="flex-1 px-6" contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 24 }}>
+          <TarjetaVidrio clase="w-full gap-5 p-6">
           <Text className="text-2xl font-bold text-foreground">Primer ingreso</Text>
           <Text className="text-base text-texto-secundario">Verifica tu correo y establece tu contraseña</Text>
 
@@ -94,28 +110,29 @@ export default function PrimerIngreso() {
 
           {paso === 'solicitar' && (
             <>
-              <View className="gap-1">
-                <Text className="text-base font-semibold text-foreground">Correo</Text>
+              <CampoFormulario
+                etiqueta="Correo"
+                pista="Obligatorio · correo electrónico válido"
+                error={formOtp.formState.errors.email?.message}
+                valido={Boolean(touchedOtp.email && !formOtp.formState.errors.email)}
+              >
                 <Controller
                   control={formOtp.control}
                   name="email"
                   render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      className="h-14 rounded-xl border border-foreground/20 bg-white/70 px-4 text-base text-foreground"
-                      placeholder="correo@ejemplo.ec"
-                      placeholderTextColor={TOKENS.textoSecundario}
-                      autoCapitalize="none"
-                      keyboardType="email-address"
-                      onBlur={onBlur}
+                    <CampoTexto
+                      etiqueta="Correo"
+                      valor={value}
                       onChangeText={onChange}
-                      value={value}
+                      onBlur={onBlur}
+                      teclado="email-address"
+                      placeholder="correo@ejemplo.ec"
+                      error={formOtp.formState.errors.email?.message}
+                      valido={Boolean(touchedOtp.email && !formOtp.formState.errors.email)}
                     />
                   )}
                 />
-                {formOtp.formState.errors.email && (
-                  <Text className="text-sm text-error">{formOtp.formState.errors.email.message}</Text>
-                )}
-              </View>
+              </CampoFormulario>
               <BotonPrincipal titulo="Enviar código OTP" onPress={formOtp.handleSubmit(solicitar)} />
             </>
           )}
@@ -123,42 +140,49 @@ export default function PrimerIngreso() {
           {paso === 'verificar' && (
             <>
               <Text className="text-base text-texto-secundario">Correo: {email}</Text>
-              <View className="gap-2">
-                <Text className="text-base font-semibold text-foreground">Código OTP</Text>
-                <Controller
-                  control={formFinal.control}
-                  name="otp"
-                  render={({ field: { onChange, value } }) => (
-                    <OtpCasillas valor={value} onChange={onChange} error={formFinal.formState.errors.otp?.message} />
-                  )}
-                />
-              </View>
-              <View className="gap-1">
-                <Text className="text-base font-semibold text-foreground">Nueva contraseña</Text>
+              {correoConfirmado ? (
+                <Text className="text-sm text-success">Correo verificado. Elige tu contraseña definitiva.</Text>
+              ) : (
+                <View className="gap-2">
+                  <Text className="text-base font-semibold text-foreground">Código OTP</Text>
+                  <Controller
+                    control={formFinal.control}
+                    name="otp"
+                    render={({ field: { onChange, value } }) => (
+                      <OtpCasillas valor={value} onChange={onChange} error={formFinal.formState.errors.otp?.message} />
+                    )}
+                  />
+                </View>
+              )}
+              <CampoFormulario
+                etiqueta="Nueva contraseña"
+                pista="Obligatorio · mínimo 8 caracteres"
+                error={formFinal.formState.errors.nuevaClave?.message}
+                valido={Boolean(touchedFinal.nuevaClave && !formFinal.formState.errors.nuevaClave)}
+              >
                 <Controller
                   control={formFinal.control}
                   name="nuevaClave"
                   render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
-                      className="h-14 rounded-xl border border-foreground/20 bg-white/70 px-4 text-base text-foreground"
-                      placeholder="••••••••"
-                      placeholderTextColor={TOKENS.textoSecundario}
-                      secureTextEntry
-                      onBlur={onBlur}
+                    <CampoTexto
+                      etiqueta="Nueva contraseña"
+                      valor={value}
                       onChangeText={onChange}
-                      value={value}
+                      onBlur={onBlur}
+                      seguro
+                      placeholder="••••••••"
+                      error={formFinal.formState.errors.nuevaClave?.message}
+                      valido={Boolean(touchedFinal.nuevaClave && !formFinal.formState.errors.nuevaClave)}
                     />
                   )}
                 />
-                {formFinal.formState.errors.nuevaClave && (
-                  <Text className="text-sm text-error">{formFinal.formState.errors.nuevaClave.message}</Text>
-                )}
-              </View>
+              </CampoFormulario>
               <BotonPrincipal titulo="Activar cuenta" onPress={formFinal.handleSubmit(finalizar)} />
             </>
           )}
-        </TarjetaVidrio>
-      </View>
+          </TarjetaVidrio>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </FondoSuave>
   );
 }

@@ -1,13 +1,14 @@
 import { crearZodResolver } from '@/shared/ui/zod-resolver';
-import { TOKENS } from '@/shared/ui/theme';
 import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { z } from 'zod';
 
 import { contenedor } from '@/composition';
 import { BotonPrincipal } from '@/shared/ui/boton-principal';
+import { CampoFormulario } from '@/shared/ui/campo-formulario';
+import { CampoTexto } from '@/shared/ui/campo-texto';
 import { FondoSuave } from '@/shared/ui/fondo-suave';
 import { LottieFeedback } from '@/shared/ui/lottie-feedback';
 import { TarjetaVidrio } from '@/shared/ui/tarjeta-vidrio';
@@ -27,7 +28,7 @@ export default function Recuperar() {
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
   const [exito, setExito] = useState(false);
 
-  const { control, handleSubmit, formState: { errors } } = useForm<Formulario>({
+  const { control, handleSubmit, formState: { errors, touchedFields } } = useForm<Formulario>({
     resolver: crearZodResolver(esquema) as never,
     defaultValues: { email: '' },
   });
@@ -47,8 +48,9 @@ export default function Recuperar() {
 
   return (
     <FondoSuave>
-      <View className="flex-1 px-6 justify-center">
-        <TarjetaVidrio clase="p-5 gap-4">
+      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView className="flex-1 px-6" contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 24 }}>
+          <TarjetaVidrio clase="w-full gap-5 p-6">
           <Text className="text-2xl font-bold text-foreground">Recuperar contraseña</Text>
           <Text className="text-base text-texto-secundario">Te enviaremos un enlace a tu correo</Text>
 
@@ -61,33 +63,37 @@ export default function Recuperar() {
             </View>
           )}
 
-          <View className="gap-1">
-            <Text className="text-base font-semibold text-foreground">Correo</Text>
+          <CampoFormulario
+            etiqueta="Correo"
+            pista="Obligatorio · correo electrónico válido"
+            error={errors.email?.message}
+            valido={Boolean(touchedFields.email && !errors.email)}
+          >
             <Controller
               control={control}
               name="email"
               render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
-                  className="h-14 rounded-xl border border-foreground/20 bg-white/70 px-4 text-base text-foreground"
-                  placeholder="correo@ejemplo.ec"
-                  placeholderTextColor={TOKENS.textoSecundario}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  onBlur={onBlur}
+                <CampoTexto
+                  etiqueta="Correo"
+                  valor={value}
                   onChangeText={onChange}
-                  value={value}
+                  onBlur={onBlur}
+                  teclado="email-address"
+                  placeholder="correo@ejemplo.ec"
+                  error={errors.email?.message}
+                  valido={Boolean(touchedFields.email && !errors.email)}
                 />
               )}
             />
-            {errors.email && <Text className="text-sm text-error">{errors.email.message}</Text>}
-          </View>
+          </CampoFormulario>
 
           <BotonPrincipal titulo="Enviar enlace" onPress={handleSubmit(onSubmit)} />
           <Text className="text-center text-sm font-semibold text-accent" onPress={() => router.replace('/login' as Href)}>
             Volver
           </Text>
-        </TarjetaVidrio>
-      </View>
+          </TarjetaVidrio>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </FondoSuave>
   );
 }
