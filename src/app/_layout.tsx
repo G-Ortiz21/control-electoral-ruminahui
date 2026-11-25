@@ -7,42 +7,85 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 
-import { RUTAS_POR_ROL } from '@/modules/auth/domain/roles';
+import { GRUPO_POR_ROL, RUTAS_POR_ROL } from '@/modules/auth/domain/roles';
 import { useSessionStore } from '@/modules/auth/presentation/session-store';
+import { contenedor } from '@/composition';
+import { entregarErroresPendientes } from '@/shared/infrastructure/errores-pendientes';
 import { inicializarSentry } from '@/shared/infrastructure/sentry';
 
 SplashScreen.preventAutoHideAsync();
 
-// Init con release y entorno (ADR-11) antes del primer render.
 inicializarSentry();
 
 const GRUPOS = ['(auth)', '(provincial)', '(coordinador)', '(veedor)'];
 
-/**
- * Raíz: carga el tema Uniwind, inicializa Sentry y redirige según el rol
- * del store (fase 1: rol simulado). La autorización REAL es RLS (ADR-05),
- * no esconder pantallas: esto es solo navegación.
- */
 function Raiz() {
+  const usuario = useSessionStore((s) => s.usuario);
   const rol = useSessionStore((s) => s.rol);
+  const estado = useSessionStore((s) => s.estado);
   const segments = useSegments();
   const router = useRouter();
+
+  useEffect(() => {
+    const usuario = useSessionStore.getState().usuario;
+    if (usuario) {
+      contenedor.sync.motor.reanudarPendientes().then(() => {
+        contenedor.sync.motor.sincronizarTodo().catch(() => {});
+      }).catch(() => {});
+    } else {
+      // Recuperación de sesión al arranque (secundaria): si el repositorio
+      // tiene una sesión en memoria, cargar el perfil y reflejarlo en el store.
+      contenedor.auth.obtenerSesionActual()
+        .then((sesion) => (sesion ? contenedor.usuarios.obtenerPerfilActual() : null))
+        .then((perfil) => {
+          if (perfil?.ok && perfil.valor) useSessionStore.getState().setSesion(perfil.valor);
+        })
+        .catch(() => {});
+    }
+    entregarErroresPendientes().catch(() => {});
+  }, []);
 
   useEffect(() => {
     SplashScreen.hideAsync();
     const grupo = segments[0] as string | undefined;
     const enApp = grupo !== undefined && GRUPOS.includes(grupo);
 
-    if (!rol && enApp && grupo !== '(auth)') {
-      router.replace('/login' as Href);
-    } else if (rol && (grupo === undefined || grupo === '(auth)')) {
-      router.replace(RUTAS_POR_ROL[rol] as Href);
+    if (!usuario) {
+      // En la ruta raíz (sin segmentos) o dentro de un grupo de la app (salvo
+      // el grupo (auth)) no hay sesión: redirigir al login. Sin esto, la app
+      // se quedaba en "/" mostrando el Lottie de carga indefinidamente.
+      if (grupo === undefined || (enApp && grupo !== '(auth)')) {
+        router.replace('/login' as Href);
+      }
+      return;
     }
-  }, [rol, segments, router]);
+
+    if (estado === 'PENDIENTE') {
+      if (grupo !== '(auth)') router.replace('/(auth)/primer-ingreso' as Href);
+      return;
+    }
+
+    if (estado !== 'ACTIVO') {
+      router.replace('/login' as Href);
+      return;
+    }
+
+    if (!rol) {
+      router.replace('/login' as Href);
+      return;
+    }
+
+    const ruta = RUTAS_POR_ROL[rol];
+    if (grupo === undefined || grupo === '(auth)') {
+      router.replace(ruta as Href);
+    } else if (grupo !== GRUPO_POR_ROL[rol] && enApp) {
+      router.replace(ruta as Href);
+    }
+  }, [usuario, rol, estado, segments, router]);
 
   return (
     <View className="flex-1 bg-background">
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }} />
     </View>
   );

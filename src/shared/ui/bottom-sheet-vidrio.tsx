@@ -14,12 +14,12 @@ const { height: ALTO_PANTALLA } = Dimensions.get('window');
 export function BottomSheetVidrio({
   visible,
   onCerrar,
-  niños,
+  children,
   alturaMax = 0.75,
 }: {
   visible: boolean;
   onCerrar: () => void;
-  niños: React.ReactNode;
+  children: React.ReactNode;
   alturaMax?: number;
 }) {
   const y = useSharedValue(visible ? ALTO_PANTALLA * 0.1 : ALTO_PANTALLA);
@@ -82,7 +82,7 @@ export function BottomSheetVidrio({
         <View className="w-full items-center pb-2 pt-1">
           <View className="w-12 h-1 rounded-full bg-foreground/30" />
         </View>
-        <View className="px-5 pb-4">{niños}</View>
+        <View className="px-5 pb-4">{children}</View>
       </Animated.View>
     </View>
   );

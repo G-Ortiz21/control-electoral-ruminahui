@@ -1,31 +1,143 @@
-import { Text, View } from 'react-native';
+import { crearZodResolver } from '@/shared/ui/zod-resolver';
+import { useRouter, type Href } from 'expo-router';
+import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { Text, TextInput, View } from 'react-native';
+import { z } from 'zod';
 
+import { contenedor } from '@/composition';
+import { RUTAS_POR_ROL } from '@/modules/auth/domain/roles';
 import { useSessionStore } from '@/modules/auth/presentation/session-store';
-import { Boton } from '@/shared/ui/boton';
+import { BotonPrincipal } from '@/shared/ui/boton-principal';
+import { EntradaOcultaSentry } from '@/shared/ui/entrada-oculta-sentry';
+import { FondoSuave } from '@/shared/ui/fondo-suave';
+import { LottieFeedback } from '@/shared/ui/lottie-feedback';
+import { TarjetaVidrio } from '@/shared/ui/tarjeta-vidrio';
 
-/** Demo con rol simulado: en la fase 3 será el login real con Supabase Auth. */
+const esquema = z.object({
+  email: z.string().min(1, 'El correo es obligatorio.').email('El correo no es válido.'),
+  password: z.string().min(1, 'La contraseña es obligatoria.'),
+});
+
+type Formulario = z.infer<typeof esquema>;
+
 export default function Login() {
-  const setRol = useSessionStore((s) => s.setRol);
+  const router = useRouter();
+  const setSesion = useSessionStore((s) => s.setSesion);
+  const setOperacion = useSessionStore((s) => s.setOperacion);
+  const operacion = useSessionStore((s) => s.operacion);
+  const mensaje = useSessionStore((s) => s.mensajeOperacion);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<Formulario>({
+    resolver: crearZodResolver(esquema) as never,
+    defaultValues: { email: '', password: '' },
+  });
+
+  const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
+
+  const onSubmit = async (data: Formulario) => {
+    setErrorGeneral(null);
+    setOperacion('cargando', 'Iniciando sesión…');
+    const res = await contenedor.casos.iniciarSesion.ejecutar(data.email, data.password);
+    if (!res.ok) {
+      setOperacion('error', res.error);
+      setErrorGeneral(res.error);
+      return;
+    }
+    setSesion(res.valor.usuario);
+    setOperacion('exito', 'Sesión iniciada.');
+    const u = res.valor.usuario;
+    if (u.estado === 'PENDIENTE') {
+      router.replace('/(auth)/primer-ingreso' as Href);
+    } else {
+      router.replace(RUTAS_POR_ROL[u.rol] as Href);
+    }
+  };
 
   return (
-    <View className="flex-1 bg-background">
-      <View className="bg-primary px-6 pb-6 pt-16">
-        <Text className="text-2xl font-bold text-white">Control Electoral Rumiñahui</Text>
-        <Text className="mt-2 text-base text-white">Escrutinio, actas y seguimiento en campo</Text>
-      </View>
-      <View className="h-1.5 bg-secondary" />
+    <FondoSuave>
+      <View className="flex-1 px-6 justify-center">
+        <View className="items-center mb-6">
+          <EntradaOcultaSentry />
+          <Text className="mt-2 text-base text-texto-secundario text-center">
+            Escrutinio, actas y seguimiento en campo
+          </Text>
+        </View>
 
-      <View className="flex-1 justify-center gap-4 px-6">
-        <Text className="text-base text-foreground">
-          Selecciona un rol (demostración con rol simulado):
-        </Text>
-        <Boton titulo="Provincial" onPress={() => setRol('PROVINCIAL')} />
-        <Boton titulo="Coordinador de recinto" variante="secundario" onPress={() => setRol('COORDINADOR')} />
-        <Boton titulo="Veedor" variante="secundario" onPress={() => setRol('VEEDOR')} />
-        <Text className="mt-4 text-sm text-foreground">
-          Fase 1: la sesión es simulada. La autorización real se aplica con RLS (ADR-05).
-        </Text>
+        <TarjetaVidrio clase="p-5 gap-4">
+          <Text className="text-2xl font-bold text-foreground">Iniciar sesión</Text>
+
+          {operacion === 'cargando' && <LottieFeedback tipo="carga" mensaje={mensaje ?? 'Cargando…'} />}
+
+          {errorGeneral && (
+            <View className="rounded-xl bg-error/10 px-4 py-3">
+              <Text className="text-error text-sm font-semibold">{errorGeneral}</Text>
+            </View>
+          )}
+
+          <View className="gap-1">
+            <Text className="text-base font-semibold text-foreground">Correo</Text>
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  className="h-14 rounded-xl border border-foreground/20 bg-white/70 px-4 text-base text-foreground"
+                  placeholder="correo@ejemplo.ec"
+                  placeholderTextColor="#3B4A78"
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+            />
+            {errors.email && <Text className="text-sm text-error">{errors.email.message}</Text>}
+          </View>
+
+          <View className="gap-1">
+            <Text className="text-base font-semibold text-foreground">Contraseña</Text>
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  className="h-14 rounded-xl border border-foreground/20 bg-white/70 px-4 text-base text-foreground"
+                  placeholder="••••••••"
+                  placeholderTextColor="#3B4A78"
+                  secureTextEntry
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+            />
+            {errors.password && <Text className="text-sm text-error">{errors.password.message}</Text>}
+          </View>
+
+          <BotonPrincipal titulo="Iniciar sesión" onPress={handleSubmit(onSubmit)} />
+
+          <View className="gap-2">
+            <Text
+              className="text-center text-sm font-semibold text-accent"
+              onPress={() => router.push('/(auth)/recuperar' as Href)}
+            >
+              Recuperar contraseña
+            </Text>
+            <Text
+              className="text-center text-sm font-semibold text-accent"
+              onPress={() => router.push('/(auth)/primer-ingreso' as Href)}
+            >
+              Primer ingreso (OTP)
+            </Text>
+          </View>
+        </TarjetaVidrio>
       </View>
-    </View>
+    </FondoSuave>
   );
 }

@@ -11,19 +11,23 @@ export type EstadoActa =
   | 'SINCRONIZANDO'
   | 'RESULTADO_RECIBIDO'
   | 'EVIDENCIA_PENDIENTE'
-  | 'RESPALDADA'
+  | 'EN_REVISION'
+  | 'EVIDENCIA_RESPALDADA'
+  | 'PERMISO_REVOCADO'
   | 'ERROR'
   | 'CONFLICTO_VERSION';
 
 const ESTILOS: Record<EstadoActa, { etiqueta: string; clase: string }> = {
-  BORRADOR: { etiqueta: 'Borrador', clase: 'border border-foreground bg-background text-foreground' },
+  BORRADOR: { etiqueta: 'Borrador', clase: 'border border-foreground/30 bg-background text-foreground' },
   GUARDADA_LOCAL: { etiqueta: 'Guardada localmente', clase: 'bg-secondary text-foreground' },
-  SINCRONIZANDO: { etiqueta: 'Sincronizando', clase: 'bg-accent text-foreground' },
-  RESULTADO_RECIBIDO: { etiqueta: 'Resultado recibido', clase: 'bg-primary text-white' },
-  EVIDENCIA_PENDIENTE: { etiqueta: 'Evidencia pendiente', clase: 'bg-warning text-white' },
-  RESPALDADA: { etiqueta: 'Respaldada', clase: 'bg-success text-white' },
-  ERROR: { etiqueta: 'Error', clase: 'bg-error text-white' },
-  CONFLICTO_VERSION: { etiqueta: 'Conflicto de versión', clase: 'bg-error text-white' },
+  SINCRONIZANDO: { etiqueta: 'Sincronizando', clase: 'bg-accent text-texto-sobre-color' },
+  RESULTADO_RECIBIDO: { etiqueta: 'Resultado recibido', clase: 'bg-primary text-texto-sobre-color' },
+  EVIDENCIA_PENDIENTE: { etiqueta: 'Evidencia pendiente', clase: 'bg-warning text-texto-sobre-color' },
+  EN_REVISION: { etiqueta: 'En revisión', clase: 'bg-accent text-texto-sobre-color' },
+  EVIDENCIA_RESPALDADA: { etiqueta: 'Evidencia respaldada', clase: 'bg-success text-texto-sobre-color' },
+  PERMISO_REVOCADO: { etiqueta: 'Permiso revocado — en revisión', clase: 'bg-error text-texto-sobre-color' },
+  ERROR: { etiqueta: 'Error', clase: 'bg-error text-texto-sobre-color' },
+  CONFLICTO_VERSION: { etiqueta: 'Conflicto de versión', clase: 'bg-error text-texto-sobre-color' },
 };
 
 export function StatusBadge({ estado }: { estado: EstadoActa }) {
