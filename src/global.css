@@ -1,21 +1,37 @@
-/* Entry de Uniwind + Tailwind 4 (DI-05: identidad visual, tokens en un único tema). */
+/* Entry de Uniwind + Tailwind 4 (DI-05 / DI-11: identidad visual, tokens en un único tema). */
 @import 'tailwindcss';
 @import 'uniwind';
 
 /*
- * Tokens de la organización (DI-05).
- * Reglas de contraste: texto blanco solo sobre primario, éxito, advertencia y error (>= 4.5:1);
- * secundario y acento SOLO como fondo con texto #0F172A, nunca como texto sobre blanco.
+ * Tokens de Movimiento Horizonte Ciudadano (DI-05 revisión 2).
+ * Fuente única de colores: ninguna pantalla usa colores sueltos.
+ *
+ * Reglas de contraste:
+ * - texto blanco SOLO sobre primario, éxito, advertencia y error (≥ 4.5:1).
+ * - secundario y acento SOLO como fondo con texto #0B1F4B, nunca como texto sobre blanco.
+ * - cianDecorativo SOLO decoración, nunca texto.
+ * - ámbar SOLO como fondo con texto #0B1F4B, nunca texto blanco.
+ * - vidrio: blanco con opacidad ≥ 0.72 donde haya texto, borde blanco 1px al 90 %,
+ *   radio 20–24, sombra suave azul rgba(30,64,175,0.12).
  */
 @theme {
-  --color-primary: #1e3a8a; /* azul profundo */
-  --color-secondary: #f59e0b; /* ámbar */
-  --color-accent: #0ea5e9; /* cielo */
+  --color-primary: #1d4ed8;           /* azul noche — provincial */
+  --color-secondary: #f59e0b;         /* ámbar solar — solo fondo con texto #0b1f4b */
+  --color-accent: #0e7490;            /* acento / veedor — texto e iconos */
+  --color-cian-decorativo: #67e8f9;   /* cian aurora — solo decoración, nunca texto */
   --color-success: #15803d;
   --color-warning: #b45309;
   --color-error: #b91c1c;
-  --color-background: #f8fafc;
-  --color-foreground: #0f172a; /* texto */
+  --color-background: #f4f8fb;        /* fondo base */
+  --color-foreground: #0b1f4b;        /* texto principal */
+  --color-texto-secundario: #3b4a78;  /* texto secundario */
+  --color-texto-sobre-color: #ffffff; /* texto sobre color */
+  --color-rol-provincial: #1d4ed8;    /* acento de rol: provincial */
+  --color-rol-coordinador: #4338ca;   /* acento de rol: coordinador */
+  --color-rol-veedor: #0e7490;        /* acento de rol: veedor */
+  --color-sombra-azul: rgba(30, 64, 175, 0.12);
+
+  --shadow-suave-azul: 0 8px 24px -4px rgba(30, 64, 175, 0.12);
 
   /* DI-05: tamaño base 18 px */
   --text-base: 18px;
