@@ -15,6 +15,7 @@ export { ListaRecintos, type RecintoAvance } from './lista-recintos';
 export { SumaEnVivo } from './suma-en-vivo';
 export { SelloPreliminar } from './sello-preliminar';
 export { OtpCasillas } from './otp-casillas';
+export { LogoSolNaciente } from './logo-sol-naciente';
 export { Boton } from './boton';
 export { LottieFeedback } from './lottie-feedback';
 export { StatusBadge } from './status-badge';
