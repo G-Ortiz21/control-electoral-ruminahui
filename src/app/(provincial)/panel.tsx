@@ -6,6 +6,7 @@ import { contenedor } from '@/composition';
 import { obtenerClienteSupabase } from '@/shared/infrastructure/supabase-client';
 import { useSessionStore } from '@/modules/auth/presentation/session-store';
 import { AnillosAvance } from '@/shared/ui/anillos-avance';
+import { TOKENS } from '@/shared/ui/theme';
 import { BannerConexion } from '@/shared/ui/banner-conexion';
 import { BarrasCandidatos } from '@/shared/ui/barras-candidatos';
 import { BotonPrincipal } from '@/shared/ui/boton-principal';
@@ -165,7 +166,7 @@ export default function PanelProvincial() {
 
   const totalPorOrg = resultados.reduce((acc: any, r: any) => {
     if (!r.organizacion_id) return acc;
-    acc[r.organizacion_id] = acc[r.organizacion_id] || { nombre: r.organizacion_nombre, votos: 0, color: r.organizacion_color ?? '#1D4ED8' };
+    acc[r.organizacion_id] = acc[r.organizacion_id] || { nombre: r.organizacion_nombre, votos: 0, color: r.organizacion_color ?? TOKENS.primario };
     acc[r.organizacion_id].votos += Number(r.votos ?? 0);
     if (r.organizacion_color) acc[r.organizacion_id].color = r.organizacion_color;
     return acc;
@@ -195,7 +196,7 @@ export default function PanelProvincial() {
     const lista = candidatosPorRecinto[r.recinto_id];
     const existente = lista.find((x) => x.organizacionId === r.organizacion_id);
     if (existente) existente.votos += Number(r.votos ?? 0);
-    else lista.push({ organizacionId: r.organizacion_id, organizacionNombre: r.organizacion_nombre, votos: Number(r.votos ?? 0), color: r.organizacion_color ?? '#1D4ED8' });
+    else lista.push({ organizacionId: r.organizacion_id, organizacionNombre: r.organizacion_nombre, votos: Number(r.votos ?? 0), color: r.organizacion_color ?? TOKENS.primario });
     totalVotosPorRecinto[r.recinto_id] = (totalVotosPorRecinto[r.recinto_id] ?? 0) + Number(r.votos ?? 0);
   }
 
@@ -257,13 +258,13 @@ export default function PanelProvincial() {
 
         <Text className="mt-6 mb-2 text-lg font-bold text-foreground">Agregar recinto</Text>
         <TarjetaVidrio clase="p-4 gap-2">
-          <TextInput placeholder="Cantón" placeholderTextColor="#3B4A78" value={canton} onChangeText={setCanton} className="h-12 rounded-xl border border-foreground/20 bg-white/70 px-4 text-foreground" />
-          <TextInput placeholder="Parroquia" placeholderTextColor="#3B4A78" value={parroquia} onChangeText={setParroquia} className="h-12 rounded-xl border border-foreground/20 bg-white/70 px-4 text-foreground" />
-          <TextInput placeholder="Nombre" placeholderTextColor="#3B4A78" value={nombre} onChangeText={setNombre} className="h-12 rounded-xl border border-foreground/20 bg-white/70 px-4 text-foreground" />
+          <TextInput placeholder="Cantón" placeholderTextColor={TOKENS.textoSecundario} value={canton} onChangeText={setCanton} className="h-12 rounded-xl border border-foreground/20 bg-white/70 px-4 text-foreground" />
+          <TextInput placeholder="Parroquia" placeholderTextColor={TOKENS.textoSecundario} value={parroquia} onChangeText={setParroquia} className="h-12 rounded-xl border border-foreground/20 bg-white/70 px-4 text-foreground" />
+          <TextInput placeholder="Nombre" placeholderTextColor={TOKENS.textoSecundario} value={nombre} onChangeText={setNombre} className="h-12 rounded-xl border border-foreground/20 bg-white/70 px-4 text-foreground" />
           <View className="flex-row gap-2">
-            <TextInput placeholder="Lat" placeholderTextColor="#3B4A78" value={lat} onChangeText={setLat} className="h-12 flex-1 rounded-xl border border-foreground/20 bg-white/70 px-4 text-foreground" />
-            <TextInput placeholder="Lon" placeholderTextColor="#3B4A78" value={lon} onChangeText={setLon} className="h-12 flex-1 rounded-xl border border-foreground/20 bg-white/70 px-4 text-foreground" />
-            <TextInput placeholder="JRV" placeholderTextColor="#3B4A78" value={jrvs} onChangeText={setJrvs} className="h-12 w-20 rounded-xl border border-foreground/20 bg-white/70 px-4 text-foreground" />
+            <TextInput placeholder="Lat" placeholderTextColor={TOKENS.textoSecundario} value={lat} onChangeText={setLat} className="h-12 flex-1 rounded-xl border border-foreground/20 bg-white/70 px-4 text-foreground" />
+            <TextInput placeholder="Lon" placeholderTextColor={TOKENS.textoSecundario} value={lon} onChangeText={setLon} className="h-12 flex-1 rounded-xl border border-foreground/20 bg-white/70 px-4 text-foreground" />
+            <TextInput placeholder="JRV" placeholderTextColor={TOKENS.textoSecundario} value={jrvs} onChangeText={setJrvs} className="h-12 w-20 rounded-xl border border-foreground/20 bg-white/70 px-4 text-foreground" />
           </View>
           <BotonPrincipal titulo="Crear recinto" rol="PROVINCIAL" onPress={crearRecinto} />
         </TarjetaVidrio>
@@ -284,7 +285,7 @@ export default function PanelProvincial() {
               </Pressable>
             ))}
           </View>
-          <TextInput placeholder="Motivo" placeholderTextColor="#3B4A78" value={motivoCoord} onChangeText={setMotivoCoord} className="h-12 rounded-xl border border-foreground/20 bg-white/70 px-4 text-foreground" />
+          <TextInput placeholder="Motivo" placeholderTextColor={TOKENS.textoSecundario} value={motivoCoord} onChangeText={setMotivoCoord} className="h-12 rounded-xl border border-foreground/20 bg-white/70 px-4 text-foreground" />
           <BotonPrincipal titulo="Designar" rol="PROVINCIAL" onPress={designar} />
         </TarjetaVidrio>
 

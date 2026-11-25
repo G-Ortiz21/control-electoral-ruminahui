@@ -8,6 +8,7 @@ import { useSessionStore } from '@/modules/auth/presentation/session-store';
 import { sincronizarCatalogo } from '@/modules/territorio/data';
 import type { MesaVeedor } from '@/modules/actas/domain';
 import { BotonPrincipal } from '@/shared/ui/boton-principal';
+import { TOKENS } from '@/shared/ui/theme';
 import { CabeceraRol } from '@/shared/ui/cabecera-rol';
 import { FondoSuave } from '@/shared/ui/fondo-suave';
 import { LottieFeedback } from '@/shared/ui/lottie-feedback';
@@ -20,12 +21,12 @@ function MiniAnilloJrv({ completadas, total }: { completadas: number; total: num
   return (
     <View className="items-center justify-center">
       <Svg width={44} height={44}>
-        <Circle cx={22} cy={22} r={r} stroke="#E2E8F0" strokeWidth={5} fill="none" />
+        <Circle cx={22} cy={22} r={r} stroke={TOKENS.bordeSuave} strokeWidth={5} fill="none" />
         <Circle
           cx={22}
           cy={22}
           r={r}
-          stroke="#0E7490"
+          stroke={TOKENS.acento}
           strokeWidth={5}
           fill="none"
           strokeLinecap="round"

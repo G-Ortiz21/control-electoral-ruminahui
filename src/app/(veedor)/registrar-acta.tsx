@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 import { contenedor } from '@/composition';
 import { useActaBorradorStore } from '@/modules/actas/presentation/acta-borrador-store';
 import { crearZodResolver } from '@/shared/ui/zod-resolver';
+import { TOKENS } from '@/shared/ui/theme';
 import { BotonPrincipal } from '@/shared/ui/boton-principal';
 import { CabeceraRol } from '@/shared/ui/cabecera-rol';
 import { FondoSuave } from '@/shared/ui/fondo-suave';
@@ -120,7 +121,7 @@ export default function RegistrarActaScreen() {
               <TextInput
                 keyboardType="numeric"
                 placeholder="0"
-                placeholderTextColor="#3B4A78"
+                placeholderTextColor={TOKENS.textoSecundario}
                 onChangeText={(t) => setValue(`org${i}` as any, t)}
                 className="h-14 rounded-xl border border-foreground/20 bg-white/70 px-4 text-lg font-mono text-foreground"
               />
@@ -136,7 +137,7 @@ export default function RegistrarActaScreen() {
               <TextInput
                 keyboardType="numeric"
                 placeholder="0"
-                placeholderTextColor="#3B4A78"
+                placeholderTextColor={TOKENS.textoSecundario}
                 onChangeText={(t) => setValue(campo, t)}
                 className="h-14 rounded-xl border border-foreground/20 bg-white/70 px-4 text-lg font-mono text-foreground"
               />

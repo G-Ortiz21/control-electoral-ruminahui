@@ -1,4 +1,5 @@
 import { crearZodResolver } from '@/shared/ui/zod-resolver';
+import { TOKENS } from '@/shared/ui/theme';
 import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -88,7 +89,7 @@ export default function Login() {
                 <TextInput
                   className="h-14 rounded-xl border border-foreground/20 bg-white/70 px-4 text-base text-foreground"
                   placeholder="correo@ejemplo.ec"
-                  placeholderTextColor="#3B4A78"
+                  placeholderTextColor={TOKENS.textoSecundario}
                   autoCapitalize="none"
                   keyboardType="email-address"
                   onBlur={onBlur}
@@ -109,7 +110,7 @@ export default function Login() {
                 <TextInput
                   className="h-14 rounded-xl border border-foreground/20 bg-white/70 px-4 text-base text-foreground"
                   placeholder="••••••••"
-                  placeholderTextColor="#3B4A78"
+                  placeholderTextColor={TOKENS.textoSecundario}
                   secureTextEntry
                   onBlur={onBlur}
                   onChangeText={onChange}

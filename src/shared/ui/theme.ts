@@ -48,3 +48,18 @@ export const TEXTO_ROL: Record<RolAcento, string> = {
   COORDINADOR: 'text-white',
   VEEDOR: 'text-white',
 } as const;
+
+/** Tokens JS para props que no aceptan className (placeholderTextColor, SVG). Misma fuente que @theme. */
+export const TOKENS = {
+  primario: '#1D4ED8',
+  acento: '#0E7490',
+  cianDecorativo: '#67E8F9',
+  secundario: '#F59E0B',
+  exito: '#15803D',
+  advertencia: '#B45309',
+  error: '#B91C1C',
+  texto: '#0B1F4B',
+  textoSecundario: '#3B4A78',
+  fondoBase: '#F4F8FB',
+  bordeSuave: '#E2E8F0',
+} as const;

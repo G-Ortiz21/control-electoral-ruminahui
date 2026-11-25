@@ -4,6 +4,7 @@ import { FlatList, Pressable, ScrollView, Text, TextInput, View } from 'react-na
 import { contenedor } from '@/composition';
 import { useSessionStore } from '@/modules/auth/presentation/session-store';
 import { BotonPrincipal } from '@/shared/ui/boton-principal';
+import { TOKENS } from '@/shared/ui/theme';
 import { BottomSheetVidrio } from '@/shared/ui/bottom-sheet-vidrio';
 import { CabeceraRol } from '@/shared/ui/cabecera-rol';
 import { FondoSuave } from '@/shared/ui/fondo-suave';
@@ -168,7 +169,7 @@ export default function RecintoCoordinador() {
             ) : null}
             <TextInput
               placeholder='{"votos":[...],"blancos":0,"nulos":0,"sufragantes":0}'
-              placeholderTextColor="#3B4A78"
+              placeholderTextColor={TOKENS.textoSecundario}
               value={nuevosValores}
               onChangeText={setNuevosValores}
               className="mb-2 h-20 rounded-xl border border-foreground/20 bg-white/70 px-4 text-foreground"
@@ -176,7 +177,7 @@ export default function RecintoCoordinador() {
             />
             <TextInput
               placeholder="Motivo"
-              placeholderTextColor="#3B4A78"
+              placeholderTextColor={TOKENS.textoSecundario}
               value={motivoCorreccion}
               onChangeText={setMotivoCorreccion}
               className="mb-3 h-12 rounded-xl border border-foreground/20 bg-white/70 px-4 text-foreground"
@@ -210,7 +211,7 @@ export default function RecintoCoordinador() {
             </View>
             <TextInput
               placeholder="Motivo"
-              placeholderTextColor="#3B4A78"
+              placeholderTextColor={TOKENS.textoSecundario}
               value={motivo}
               onChangeText={setMotivo}
               className="mb-3 h-12 rounded-xl border border-foreground/20 bg-white/70 px-4 text-foreground"
